@@ -11,7 +11,7 @@ copiadoCarpetasFuente()
 {
 	clear
 	echo -e "\033[37m Secretaría Ejecutiva del Sistema Estatal Anticorrupción Puebla - SESEAP \033[0m"
-	iNoINEGI=9
+	iNoINEGI=$1
 	sNoINEGI=$(printf "%d" ${iNoINEGI})
 	#echo ${sNoINEGI}
 	#echo "Inicia verificación del valor asignado"
@@ -33,7 +33,7 @@ copiadoCarpetasFuente()
 	fi
 
 
-    #Limpia instalaciones previas
+    #Limpia carpetas de instalaciones previas
 	# Usamos el comando test para verificar si el directorio existe
 	if [ -d "SistemaDeclaraciones_backend" ]; then
 	  # El directorio existe
@@ -61,23 +61,24 @@ copiadoCarpetasFuente()
           # El directorio no existe
                 echo "El directorio -SistemaDeclaraciones_reportes- no existe"
     fi	
-	
+	#Carpetas previas eliminadas
 
 	echo "Creando directorio raíz para el municipio ${sNoINEGI}"
 
-	#echo ${sNoINEGI}
-
+	#Creando carpeta ORIGEN de la instalación
 	sudo mkdir -p "${sNoINEGI}" -m 777
 	cd "${sNoINEGI}"
 
-	# B A C K E N D -- - - - - - - - - - - - - - - - - - - - - - - - 
-	echo "Número de municipio a crear : $sNoINEGI"
+	echo -e "\033[34m Número de municipio a crear es : $sNoINEGI \033[0m"
 	# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-	# Ruta de origen y destino
+	# Ruta de origen (carpetas tal como se descargan del repositorio de la PDN)
 	ruta_origen="/home/pdepuebla/SistemaDeclaraciones_backend"
-	#ruta_destino="/".$sNoINEGI."/SistemaDeclaraciones_backend"
+	# Ruta de destino (carpetas copiadas donde se hacen las personalizaciones)
 	ruta_destino=$(printf "%s" "./")
 
+
+	# B A C K E N D -- - - - - - - - - - - - - - - - - - - - - - - - 
+	# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	# Verificar si la carpeta de destino existe, si no, crearla
 	if [ ! -d "$ruta_destino" ]; then
 	    mkdir -p "$ruta_destino" -m 755
@@ -111,8 +112,9 @@ copiadoCarpetasFuente()
 	echo -e "\033[33m&&&&&&&&&&&&&&&&&&&&  F R O N T E N D  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& \033[0m"
 	echo "Carpeta Frontend copiada para el municipio con número de INEGI: " $sNoINEGI
 	cd SistemaDeclaraciones_frontend
-	configuraFrontend_environment ${iNoINEGI} "192.168.0.200"
-	#cd SistemaDeclaraciones_frontend
+	echo -e "\033[35m&&&&&&&&&&&&&&&&&&&&  Configurando Environmet en Frontend \033[0m"
+	configuraFrontend_environment ${iNoINEGI} "192.168.0.226"
+	echo -e "\033[35m&&&&&&&&&&&&&&&&&&&&  Configurando Docker-compose.yml en Frontend \033[0m"
 	configurarDockerCompose_FrondEnd ${iNoINEGI}
 	cd ..
 	# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -158,20 +160,38 @@ configuraBackend_env()
    # Del '.env'
    iPort=3000
    iElasticSearch=9200
-   iReportPort=3001
+   iReportPort=3001+500
+   iPortWebUrl=8000
 
    #Del 'docker-compose.yml'
    sumaiPort=$(echo "$iPort+ $1" | bc)
    sumaiElasticSearch=$(echo "$iElasticSearch+ $1" | bc)
-   sumaiElasticSearchExtra=$(echo "$iElasticSearch+100+ $1" | bc)
+   sumaiElasticSearchExtra=$(echo "$iElasticSearch+200+ $1" | bc)
    sumaiReportPort=$(echo "$iReportPort+ $1" | bc)
+   sumaiPortWebUrl=$(echo "$iPortWebUrl+ $1" | bc)
    nuevaBaseDatos=$(echo "declaraciones_+ $1" | bc)
 
+   username="declarausr"
+   passwd="declarapsw"
+   localhost="192.168.0.226"
+
+	if [ -f .env ]; then
+  		echo "El archivo .env ya existe."
+	else
+  		#Crea el nuevo archivo .env a partir de .env.example
+   		sudo cp -p -r -f -a -v .env.example .env
+	fi
+
+
+   echo -e "\033[35m&&&&&&&&&&&&&&&&&&&&  Configurando .env del Backend \033[0m"
    #Cargando el archivo .env
    chmod -R 777 .env
    #Configurando el archivo .env del BACKEND
    		sudo perl -pi -e "s[PORT=3000][PORT=$sumaiPort]g" .env
 		echo "Variable PORT del .env configurada con el valor: ${sumaiPort}"
+		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		sudo perl -pi -e "s[FE_RESET_PASSWORD_URL=http://localhost:8080][FE_RESET_PASSWORD_URL=http://localhost:$sumaiPortWebUrl]g" .env
+		echo "Variable puerto de recuperación de password en el .env configurada con el valor: ${sumaiPortWebUrl}"		
 		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    		sudo perl -pi -e "s[ELASTIC_SEARCH_URL=http://localhost:9200][ELASTIC_SEARCH_URL=http://localhost:$sumaiElasticSearch]g" .env
 		echo "Variable puerto del Elastic Search en el .env configurada con el valor: ${sumaiElasticSearch}"		
@@ -179,12 +199,22 @@ configuraBackend_env()
    		sudo perl -pi -e "s[REPORTS_URL=http://localhost:3001][REPORTS_URL=http://localhost:$sumaiReportPort]g" .env
 		echo "Variable ReportPort del .env configurada con el valor: ${sumaiReportPort}"
 		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -		
-   		sudo perl -pi -e "s[MONGO_DB=declaraciones][MONGO_DB=declaraciones_$nuevaBaseDatos]g" .env
+   		sudo perl -pi -e "s[MONGO_USERNAME=username][MONGO_USERNAME=$username]g" .env
+		echo "Variable Mongo_Username del .env configurada con el valor: ${username}"		
+		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -		
+   		sudo perl -pi -e "s[MONGO_PASSWORD=passwd][MONGO_PASSWORD=$passwd]g" .env
+		echo "Variable Mongo_Password del .env configurada con el valor: ${passwd}"			
+		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   		sudo perl -pi -e "s[MONGO_HOSTNAME=localhost][MONGO_HOSTNAME=$localhost]g" .env
+		echo "Variable Mongo_Hostname del .env configurada con el valor: ${localhost}"			
+		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -		
+   		sudo perl -pi -e "s[MONGO_DB=newmodels][MONGO_DB=declaraciones_$nuevaBaseDatos]g" .env
 		echo "Variable Mongo_DB del .env configurada con el valor: ${nuevaBaseDatos}"		
    #Configurando el archivo .env del BACKEND
 
    #Configurando el archivo docker-compose.yml del BACKEND
 		#Cargando el archivo docker-compose.yml
+		echo -e "\033[35m&&&&&&&&&&&&&&&&&&&&  Configurando Docker-compose.yml en Backend\033[0m"
 		chmod -R 777 docker-compose.yml
 		#Cargando el archivo docker-compose.yml
 		#Nombre del servicio de 'Reports' a reports_sNoMunicipio
@@ -235,28 +265,33 @@ configuraFrontend_environment()
 	cd src
 	cd environments
 
+   iServerUrl=3000
    IPComputer=$2
    iPageUrl=4200
    sumaiPageUrlPort=$(echo "$iPageUrl + $1" | bc)
+   sumaiServerUrlPort=$(echo "$iServerUrl + $1" | bc)
 
    #Cargando el archivo environment.prod.ts -- - - - - - - - - - - - - - - - - - 
    chmod -R 777 environment.prod.ts
    #Configurando el archivo environment.prod.ts
-   		sudo perl -pi -e "s[serverUrl: 'http://localhost:3000,'][serverUrl: 'http://$IPComputer/api',]g" environment.prod.ts
-		echo "Se ha preconfigurado el Server Url para el NGINX  cambiando el puerto 3000 por el valor de la IP : ${IPComputer}/api"
+		echo "Archivo environment.prod.ts"
+   		#sudo perl -pi -e "s[serverUrl: 'http://localhost:3000,'][serverUrl: 'http://$IPComputer/api',]g" environment.prod.ts
+		sudo perl -pi -e "s[serverUrl: 'http://0.0.0.0:3000',][serverUrl: 'http://$IPComputer:$sumaiServerUrlPort',]g" environment.prod.ts
+		echo "Se ha preconfigurado el Server Url para el NGINX  cambiando el puerto 3000 por el valor de la IP : ${IPComputer}:${sumaiServerUrlPort}"
 		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-		sudo perl -pi -e "s[pageUrl: 'http://localhost:4200/','][pageUrl: 'http://localhost:$sumaiPageUrlPort/,']g" environment.prod.ts
-		echo "Preconfigurado de la Page Url para utilizar el NGINX  cambiando el puerto 4200 por el valor : ${sumaiPageUrlPort}"
+		#sudo perl -pi -e "s[pageUrl: 'http://localhost:4200/','][pageUrl: 'http://localhost:$sumaiPageUrlPort/,']g" environment.prod.ts
+		#echo "Preconfigurado de la Page Url para utilizar el NGINX  cambiando el puerto 4200 por el valor : ${sumaiPageUrlPort}"
    
 
    #Cargando el archivo environment.ts - - - - - - - - - - - - - - - - - - - 
    chmod -R 777 environment.ts
    #Configurando el archivo environment.ts
-   		sudo perl -pi -e "s[serverUrl: 'http://localhost:3000,'][serverUrl: 'http://$IPComputer/api',]g" environment.ts
-		echo "Se ha preconfigurado el Server Url para el NGINX  cambiando el puerto 3000 por el valor de la IP : ${IPComputer}/api"
+   		echo "Archivo environment.ts"
+   		sudo perl -pi -e "s[serverUrl: 'http://0.0.0.0:3000',][serverUrl: 'http://$IPComputer:$sumaiServerUrlPort',]g" environment.ts
+		echo "Se ha preconfigurado el Server Url para el NGINX  cambiando el puerto 3000 por el valor de la IP : ${IPComputer}:${sumaiServerUrlPort}"
 		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-		sudo perl -pi -e "s[pageUrl: 'http://localhost:4200/','][pageUrl: 'http://localhost:$sumaiPageUrlPort/,']g" environment.ts
-		echo "Preconfigurado de la Page Url para el NGINX  cambiando el puerto 4200 por el valor : ${sumaiPageUrlPort}"
+		#sudo perl -pi -e "s[pageUrl: 'http://localhost:4200/','][pageUrl: 'http://localhost:$sumaiPageUrlPort/,']g" environment.ts
+		#echo "Preconfigurado de la Page Url para el NGINX  cambiando el puerto 4200 por el valor : ${sumaiPageUrlPort}"
 	cd ..
 	cd ..
 	#Saliendo de /src/environments y regresando a SistemaDeclaraciones_frontend raíz
@@ -274,8 +309,10 @@ configuraReportes_env()
    #Cargando el archivo .env -- - - - - - - - - - - - - - - - - - 
    chmod -R 777 .env
    #Configurando el archivo .env
-   		sudo perl -pi -e "s[Port=3000][Port=$sumaiPort]g" .env
-		echo "Se ha configurado el puerto de impresión 3000 por el nuevo valor ${sumaiPort}"
+        echo -e "\033[35m&&&&&&&&&&&&&&&&&&&&  Configurando .env de Reportes \033[0m"
+		echo "Configurando el archivo .env en Reportes"
+   		sudo perl -pi -e "s[Port=3001][Port=$sumaiPort]g" .env
+		echo "Se ha configurado el puerto de impresión 3001 por el nuevo valor ${sumaiPort}"
 		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 }
 
@@ -296,7 +333,7 @@ configurarDockerCompose_FrondEnd()
    #Cargando el archivo docker-compose.yml - - - - - - - - - - - - - - - - - - 
    chmod -R 777 docker-compose.yml
    #Configurando el nombre de la 'webapp' de publicación en el archivo docker-compose.yml
-   		sudo perl -pi -e "s[  webapp:][  webapp_$sumaiPort:]g" docker-compose.yml
+   		sudo perl -pi -e "s[  webapp:][  webapp_$1:]g" docker-compose.yml
 		echo "Se han configurado el nombre de la Webapp de 'webapp' a 'webapp_${sumaiPort}'"
    #Configurando los puertos de publicación de la 'webapp' en el archivo docker-compose.yml
    		sudo perl -pi -e "s[      - 8080:80][      - $sumaiPort:80]g" docker-compose.yml
@@ -315,7 +352,7 @@ configurarDockerCompose_Reportes()
 	#	Los valores de la sección ports del archivo docker-compose.yml
     #   Ports 3001 + No. INEGI del Municipio : 3001
 
-   iPort=3001
+   iPort=3001+500
    sumaiPort=$(echo "$iPort + $1" | bc)
 
    #Cargando el archivo docker-compose.yml - - - - - - - - - - - - - - - - - - 
@@ -329,15 +366,15 @@ configurarDockerCompose_Reportes()
 
 reconstruyeDocker()
 {
-	#Reconstruye el Backend
+	#Reconstruye el Backend y Reportes
 	cd SistemaDeclaraciones_backend
-        sudo git pull
         sudo docker-compose -p declaraciones-backend up -d --build --force-recreate
-	echo "Backend y reportes reconstruidos..."
+		cd ..
+	echo "Backend y reportes reconstruidos!..."
+	#Reconstruye el FrontEnd
         cd SistemaDeclaraciones_frontend
-        sudo git pull
         sudo docker-compose -p declaraciones-frontend up -d --build --force-recreate
-        echo "Frontend reconstruido..."
+        echo "Frontend reconstruido!..."
 
 }
 
@@ -348,7 +385,56 @@ limpiarImagenesDocker()
 	docker system prune -a
 }
 
+verificaDirectoriosFuente()
+{
+	if [[ -d SistemaDeclaraciones_backend ]]; then
+		echo "El directorio Backend fuente existe."
+	else
+		echo "Obteniendo archivos fuente del Backend desde PDN"
+		sudo git clone https://github.com/PDNMX/SistemaDeclaraciones_backend.git
+	fi
+	
+	if [[ -d SistemaDeclaraciones_frontend ]]; then
+		echo "El directorio Frontend existe."
+	else
+		echo "Obteniendo archivos fuente del Frontend desde PDN"
+		sudo git clone https://github.com/PDNMX/SistemaDeclaraciones_frontend.git
+	fi
+
+	if [[ -d SistemaDeclaraciones_reportes ]]; then
+  		echo "El directorio Reportes existe."
+	else
+		echo "Obteniendo archivos fuente de Reportes desde PDN"
+  		sudo git clone https://github.com/PDNMX/SistemaDeclaraciones_reportes.git
+	fi
+}
+
+function obtenNoMunicipio() {
+  # Obtener el valor del parámetro
+  numero=$1
+
+  # Validar que sea un número entero
+  if ! [[ "$numero" =~ ^[0-9]+$ ]]; then
+    echo "El valor ingresado no es un número válido para un municipio del Edo. de Puebla."
+    exit 1
+  fi
+
+  # Validar que esté dentro del rango
+  if [[ "$numero" -lt 1 || "$numero" -gt 217 ]]; then
+    echo "El valor ingresado no está dentro del rango de 1 a 217."
+    exit 1
+  fi
+
+  # Usar el valor dentro de la función
+  echo "El valor ingresado y validado es: $numero"
+  copiadoCarpetasFuente "$numero"
+}
+
 #- - - - - - - - -  -- - - - - - - - - - - - - - - - - - - - - - - - - 
+#Existen los archivos fuentes?
+verificaDirectoriosFuente
+
+
 # Mostrar pregunta para limpiar el Docker
   echo "¿Desea limpiar todo el Docker? (Si/No)"
 
@@ -364,9 +450,14 @@ limpiarImagenesDocker()
   fi
 #- - - - - - - - -  -- - - - - - - - - - - - - - - - - - - - - - - - - 
 
+#- - - - - - - - -  -- - - - - - - - - - - - - - - - - - - - - - - - - 
 clear
-echo "Inicia el proceso"
-copiadoCarpetasFuente
+echo "Ingrese un número entre 1 y 2017: "
+read numero
+obtenNoMunicipio "$numero"
+#copiadoCarpetasFuente 
+#- - - - - - - - -  -- - - - - - - - - - - - - - - - - - - - - - - - - 
+
 
 #- - - - - - - - -  -- - - - - - - - - - - - - - - - - - - - - - - - - 
 # Mostrar pregunta para continuar a la reconstrucción del Docker
@@ -380,7 +471,6 @@ copiadoCarpetasFuente
     #echo "Respuesta válida: $respuestaDocker"
 	echo "Se procede a reconstruir el Docker"
 	reconstruyeDocker
-    break
   else
     echo "Portal de Declaraciones Patrimoniales del Municipio  ha sido desplegado."
   fi
