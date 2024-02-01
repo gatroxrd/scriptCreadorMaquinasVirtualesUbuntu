@@ -1,0 +1,72 @@
+server {
+        listen 80;
+        server_name 192.168.10.100;
+
+	location /honey/ {
+            rewrite /honey(/.*)$ $1 break;
+            proxy_pass http://localhost:8057;
+            proxy_http_version 1.1;
+            proxy_set_header   X-Forwarded-For $remote_addr;
+            proxy_set_header   Host $http_host;
+        }
+	
+	location /honey/api {
+            rewrite /honey/api(/.*)$ $1 break;
+            proxy_pass http://localhost:3057;
+            proxy_http_version 1.1;
+            proxy_set_header   X-Forwarded-For $remote_addr;
+            proxy_set_header   Host $http_host;
+        }
+
+
+
+	location /franciscozmena/ {
+            rewrite /franciscozmena(/.*)$ $1 break;
+            proxy_pass http://localhost:8064;
+            proxy_http_version 1.1;
+            proxy_set_header   X-Forwarded-For $remote_addr;
+            proxy_set_header   Host $http_host;
+        }
+	
+	location /franciscozmena/api {
+            rewrite /franciscozmena/api(/.*)$ $1 break;
+            proxy_pass http://localhost:3064;
+            proxy_http_version 1.1;
+            proxy_set_header   X-Forwarded-For $remote_addr;
+            proxy_set_header   Host $http_host;
+        }
+
+
+	location /jalpan/ {
+            rewrite /jalpan(/.*)$ $1 break;
+            proxy_pass http://localhost:8086;
+            proxy_http_version 1.1;
+            proxy_set_header   X-Forwarded-For $remote_addr;
+            proxy_set_header   Host $http_host;
+        }
+	
+	location /jalpan/api {
+            rewrite /jalpan/api(/.*)$ $1 break;
+            proxy_pass http://localhost:3086;
+            proxy_http_version 1.1;
+            proxy_set_header   X-Forwarded-For $remote_addr;
+            proxy_set_header   Host $http_host;
+        }
+
+
+	location /naupan/ {
+            rewrite /naupan(/.*)$ $1 break;
+            proxy_pass http://localhost:8100;
+            proxy_http_version 1.1;
+            proxy_set_header   X-Forwarded-For $remote_addr;
+            proxy_set_header   Host $http_host;
+        }
+	
+	location /naupan/api {
+            rewrite /naupan/api(/.*)$ $1 break;
+            proxy_pass http://localhost:3100;
+            proxy_http_version 1.1;
+            proxy_set_header   X-Forwarded-For $remote_addr;
+            proxy_set_header   Host $http_host;
+        }
+}
