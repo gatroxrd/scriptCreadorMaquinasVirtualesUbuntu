@@ -477,7 +477,7 @@ reconstruyeDocker()
 		38	)
 			respuesta="cuapiaxtlademadero"  ;;
 		39	)
-			respuesta="cuautempan	"  ;;
+			respuesta="cuautempan"  ;;
 		40	) 
 			respuesta="cuautinchan"  ;;
 		41	)
@@ -485,7 +485,7 @@ reconstruyeDocker()
 		42	)
 			respuesta="cuayucadeandrade"  ;;
 		43	) 
-			respuesta="cuetzalan del progreso"  ;;
+			respuesta="cuetzalandelprogreso"  ;;
 		44	)
 			respuesta="cuyoaco"  ;;
 		45	)
@@ -511,7 +511,7 @@ reconstruyeDocker()
 		55	)
 			respuesta="chila"  ;;
 		56	)
-			respuesta="chiladela sal"  ;;
+			respuesta="chiladelasal"  ;;
 		57	)
 			respuesta="honey"  ;;
 		58	)
@@ -605,7 +605,7 @@ reconstruyeDocker()
 		102	) 
 			respuesta="nealtican"  ;;
 		103	)
-			respuesta="nicolas bravo"  ;;
+			respuesta="nicolasbravo"  ;;
 		104	)
 			respuesta="nopalucan"  ;;
 		105	)
@@ -683,7 +683,7 @@ reconstruyeDocker()
 		141	)
 			respuesta="sanpedroyeloixtlahuaca"  ;;
 		142	)
-			respuesta="sansalvadorelseco	"  ;;
+			respuesta="sansalvadorelseco"  ;;
 		143	)
 			respuesta="sansalvadorelverde"  ;;
 		144	)
@@ -803,7 +803,7 @@ reconstruyeDocker()
 		201	)
 			respuesta="xochiltepec"  ;;
 		202	)
-			respuesta="xochitlandevicente suarez	"  ;;
+			respuesta="xochitlandevicentesuarez	"  ;;
 		203	)
 			respuesta="xochitlantodossantos"  ;;
 		204	)
@@ -1199,7 +1199,7 @@ configuraNGIX()
 		38	)
 			respuesta="cuapiaxtlademadero"  ;;
 		39	)
-			respuesta="cuautempan	"  ;;
+			respuesta="cuautempan"  ;;
 		40	) 
 			respuesta="cuautinchan"  ;;
 		41	)
@@ -1207,7 +1207,7 @@ configuraNGIX()
 		42	)
 			respuesta="cuayucadeandrade"  ;;
 		43	) 
-			respuesta="cuetzalan del progreso"  ;;
+			respuesta="cuetzalandelprogreso"  ;;
 		44	)
 			respuesta="cuyoaco"  ;;
 		45	)
@@ -1233,7 +1233,7 @@ configuraNGIX()
 		55	)
 			respuesta="chila"  ;;
 		56	)
-			respuesta="chiladela sal"  ;;
+			respuesta="chiladelasal"  ;;
 		57	)
 			respuesta="honey"  ;;
 		58	)
@@ -1327,7 +1327,7 @@ configuraNGIX()
 		102	) 
 			respuesta="nealtican"  ;;
 		103	)
-			respuesta="nicolas bravo"  ;;
+			respuesta="nicolasbravo"  ;;
 		104	)
 			respuesta="nopalucan"  ;;
 		105	)
@@ -1511,7 +1511,7 @@ configuraNGIX()
 		194	)
 			respuesta="venustianocarranza"  ;;
 		195	)
-			respuesta="vicente guerrero"  ;;
+			respuesta="vicenteguerrero"  ;;
 		196	)
 			respuesta="xayacatlandebravo"  ;;
 		197	)
@@ -1525,7 +1525,7 @@ configuraNGIX()
 		201	)
 			respuesta="xochiltepec"  ;;
 		202	)
-			respuesta="xochitlandevicente suarez	"  ;;
+			respuesta="xochitlandevicentesuarez	"  ;;
 		203	)
 			respuesta="xochitlantodossantos"  ;;
 		204	)
@@ -1545,7 +1545,7 @@ configuraNGIX()
 		211	) 
 			respuesta="zaragoza"  ;;
 		212	) 
-			respuesta="zautla	" ;;
+			respuesta="zautla" ;;
 		213	)
 			respuesta="zihuateutla"  ;;
 		214	)
