@@ -85,7 +85,7 @@ copiadoCarpetasFuente()
 	echo -e "\033[33m&&&&&&&&&&&&&&&&&&&&  B A C K E N D  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& \033[0m"
 	echo "Carpeta Backend copiada para el municipio con número de INEGI: " $sNoINEGI
 	cd SistemaDeclaraciones_backend
-	configuraBackend_env ${iNoINEGI}
+	configuraBackend_env ${iNoINEGI} "$2"
 	cd ..
 	# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
@@ -109,7 +109,7 @@ copiadoCarpetasFuente()
 	echo "Carpeta Frontend copiada para el municipio con número de INEGI: " $sNoINEGI
 	cd SistemaDeclaraciones_frontend
 	echo -e "\033[35m&&&&&&&&&&&&&&&&&&&&  Configurando Environmet en Frontend \033[0m"
-	configuraFrontend_environment ${iNoINEGI} "192.168.0.226"
+	configuraFrontend_environment ${iNoINEGI} "$2"
 	echo -e "\033[35m&&&&&&&&&&&&&&&&&&&&  Configurando Docker-compose.yml en Frontend \033[0m"
 	configurarDockerCompose_FrondEnd ${iNoINEGI}
 	cd ..
@@ -158,19 +158,34 @@ configuraBackend_env()
    iElasticSearch=9200
    iReportPort=3001+500
    iPortWebUrl=8000
-   echo "declaraciones_$sNoINEGI"
    #Del 'docker-compose.yml'
    sumaiPort=$(echo "$iPort+ $1" | bc)
    sumaiElasticSearch=$(echo "$iElasticSearch+ $1" | bc)
    sumaiElasticSearchExtra=$(echo "$iElasticSearch+200+ $1" | bc)
    sumaiReportPort=$(echo "$iReportPort+ $1" | bc)
    sumaiPortWebUrl=$(echo "$iPortWebUrl+ $1" | bc)
-   nuevaBaseDatos=$(echo "declaraciones_+ $1" | bc)
+
+   iNoBD=$1
+   export sNoBD=$(printf "%03d" ${iNoBD})
+
+   set -m
+	
+	if [[ $iNoBD < 10 ]]; then
+		sCeros="00"
+		sNoBD="${sCeros}${sNoBD}"
+	elif [[ $iNoBD < 100 ]]; then
+		sCeros="0"
+		sNoBD="${sCeros}${sNoBD}"
+	fi
+	
+   #nombreBD="declaraciones_"
+
+   #nuevaBaseDatos="${nombreBD}${sNoBD}" 
 
    #P A R A M E T R I Z A R
    username="declarausr"
    passwd="declarapsw"
-   localhost="192.168.0.226"
+   localhost="$2"
 
 	if [ -f .env ]; then
   		echo "El archivo .env ya existe."
@@ -205,8 +220,8 @@ configuraBackend_env()
    		sudo perl -pi -e "s[MONGO_HOSTNAME=localhost][MONGO_HOSTNAME=$localhost]g" .env
 		echo "Variable Mongo_Hostname del .env configurada con el valor: ${localhost}"			
 		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -		
-   		sudo perl -pi -e "s[MONGO_DB=newmodels][MONGO_DB=declaraciones_$nuevaBaseDatos]g" .env
-		echo "Variable Mongo_DB del .env configurada con el valor: ${nuevaBaseDatos}"		
+   		sudo perl -pi -e "s[MONGO_DB=newmodels][MONGO_DB=declaraciones_$sNoBD]g" .env
+		echo "Variable Mongo_DB del .env configurada con el valor: ${sNoBD}"		
    #Configurando el archivo .env del BACKEND
 
    #Configurando el archivo docker-compose.yml del BACKEND
@@ -273,8 +288,8 @@ configuraFrontend_environment()
    #Configurando el archivo environment.prod.ts
 		echo "Archivo environment.prod.ts"
    		#sudo perl -pi -e "s[serverUrl: 'http://localhost:3000,'][serverUrl: 'http://$IPComputer/api',]g" environment.prod.ts
-		#sudo perl -pi -e "s[serverUrl: 'http://0.0.0.0:3000',][serverUrl: 'http://$IPComputer:$sumaiServerUrlPort',]g" environment.prod.ts
-		sudo perl -pi -e "s[serverUrl: 'http://0.0.0.0:3000',][serverUrl: 'http://$IPComputer/api',]g" environment.prod.ts
+		sudo perl -pi -e "s[serverUrl: 'http://0.0.0.0:3000',][serverUrl: 'http://$IPComputer:$sumaiServerUrlPort',]g" environment.prod.ts
+		#sudo perl -pi -e "s[serverUrl: 'http://0.0.0.0:3000',][serverUrl: 'http://$IPComputer/api',]g" environment.prod.ts
 		echo "Se ha preconfigurado el Server Url para el NGINX  cambiando el puerto 3000 por el valor de la IP : ${IPComputer}:${sumaiServerUrlPort}"
 		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		#sudo perl -pi -e "s[pageUrl: 'http://localhost:4200/','][pageUrl: 'http://localhost:$sumaiPageUrlPort/,']g" environment.prod.ts
@@ -285,8 +300,8 @@ configuraFrontend_environment()
    chmod -R 777 environment.ts
    #Configurando el archivo environment.ts
    		echo "Archivo environment.ts"
-   		#sudo perl -pi -e "s[serverUrl: 'http://0.0.0.0:3000',][serverUrl: 'http://$IPComputer:$sumaiServerUrlPort',]g" environment.ts
-		sudo perl -pi -e "s[serverUrl: 'http://0.0.0.0:3000',][serverUrl: 'http://$IPComputer/api',]g" environment.ts
+   		sudo perl -pi -e "s[serverUrl: 'http://0.0.0.0:3000',][serverUrl: 'http://$IPComputer:$sumaiServerUrlPort',]g" environment.ts
+		#sudo perl -pi -e "s[serverUrl: 'http://0.0.0.0:3000',][serverUrl: 'http://$IPComputer/api',]g" environment.ts
 		echo "Se ha preconfigurado el Server Url para el NGINX  cambiando el puerto 3000 por el valor de la IP : ${IPComputer}:${sumaiServerUrlPort}"
 		#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		#sudo perl -pi -e "s[pageUrl: 'http://localhost:4200/','][pageUrl: 'http://localhost:$sumaiPageUrlPort/,']g" environment.ts
@@ -376,12 +391,459 @@ reconstruyeDocker()
 	cd SistemaDeclaraciones_backend
         sudo docker-compose -p declaraciones-backend up -d --build --force-recreate
 		cd ..
-	echo "Backend y reportes reconstruidos!..."
+		echo "Backend y reportes reconstruidos!..."
 	#Reconstruye el FrontEnd
         cd SistemaDeclaraciones_frontend
         sudo docker-compose -p declaraciones-frontend up -d --build --force-recreate
         echo "Frontend reconstruido!..."
 
+	valor=$2
+
+	case $valor in			
+		1   )
+			respuesta="acajete"  ;;
+		2	)
+			respuesta="acateno"  ;;
+		3	)
+			respuesta="acatlan"  ;;
+		4	)
+			respuesta="acatzingo"  ;;
+		5	)
+			respuesta="acteopan"  ;;
+		6	)
+			respuesta="ahuacatlan"  ;;
+		7	)
+			respuesta="ahuatlan"  ;;
+		8	)
+			respuesta="ahuazotepec"  ;;
+		9	)
+			respuesta="ahuehuetitla"  ;;
+		10	)
+			respuesta="ajalpan"  ;;
+		11	)
+			respuesta="albinozertuche"  ;;
+		12	) 
+			respuesta="aljojuca"  ;;
+		13	)
+			respuesta="altepexi"  ;;
+		14	)
+			respuesta="amixtlan"  ;;
+		15	)
+			respuesta="amozoc"  ;;
+		16	)
+			respuesta="aquixtla"  ;;
+		17	) 
+			respuesta="atempan"  ;;
+		18	)
+			respuesta="atexcal"  ;;
+		19	)
+			respuesta="atlixco"  ;;
+		20	)
+			respuesta="atoyatempan"  ;;
+		21	) 
+			respuesta="atzala"  ;;
+		22	)
+			respuesta="atzitzihuacan"  ;;
+		23	) 
+			respuesta="atzitzintla"  ;;
+		24	) 
+			respuesta="axutla"  ;;
+		25	) 
+			respuesta="ayotoxcodeguerrero"  ;;
+		26	)
+			respuesta="calpan"  ;;
+		27	)
+			respuesta="caltepec"  ;;
+		28	)
+			respuesta="camocuautla"  ;;
+		29	)
+			respuesta="caxhuacan"  ;;
+		30	) 
+			respuesta="coatepec"  ;;
+		31	)
+			respuesta="coatzingo"  ;;
+		32	)
+			respuesta="cohetzala"  ;;
+		33	)
+			respuesta="cohuecan"  ;;
+		34	)
+			respuesta="coronango"  ;;
+		35	)
+			respuesta="coxcatlan"  ;;
+		36	)
+			respuesta="coyomeapan"  ;;
+		37	)
+			respuesta="coyotepec"  ;;
+		38	)
+			respuesta="cuapiaxtlademadero"  ;;
+		39	)
+			respuesta="cuautempan	"  ;;
+		40	) 
+			respuesta="cuautinchan"  ;;
+		41	)
+			respuesta="cuautlancingo"  ;;
+		42	)
+			respuesta="cuayucadeandrade"  ;;
+		43	) 
+			respuesta="cuetzalan del progreso"  ;;
+		44	)
+			respuesta="cuyoaco"  ;;
+		45	)
+			respuesta="chalchicomuladesesma"  ;;
+		46	) 
+			respuesta="chapulco"  ;;
+		47	)
+			respuesta="chiautla"  ;;
+		48	)
+			respuesta="chiautzingo"  ;;
+		49	) 
+			respuesta="chiconcuautla"  ;;
+		50	)
+			respuesta="chichiquila"  ;;
+		51	)
+			respuesta="chietla"  ;;
+		52	) 
+			respuesta="chigmecatitlan"  ;;
+		53	)
+			respuesta="chignahuapan"  ;;
+		54	) 
+			respuesta="chignautla"  ;;
+		55	)
+			respuesta="chila"  ;;
+		56	)
+			respuesta="chiladela sal"  ;;
+		57	)
+			respuesta="honey"  ;;
+		58	)
+			respuesta="chilchotla"  ;;
+		59	) 
+			respuesta="chinantla"  ;;
+		60	) 
+			respuesta="domingoarenas"  ;;
+		61	)
+			respuesta="eloxochitlan"  ;;
+		62	)
+			respuesta="epatlan"  ;;
+		63	)
+			respuesta="esperanza"  ;;
+		64	)
+			respuesta="franciscozmena"  ;;
+		65	)
+			respuesta="generalfelipeangeles"  ;;
+		66	)
+			respuesta="guadalupe"  ;;
+		67	)
+			respuesta="guadalupevictoria"  ;;
+		68	) 
+			respuesta="hermenegildogaleana"  ;;
+		69	)
+			respuesta="huaquechula"  ;;
+		70	)
+			respuesta="huatlatlauca"  ;;
+		71	)
+			respuesta="huauchinango"  ;;
+		72	)
+			respuesta="huehuetla"  ;;
+		73	) 
+			respuesta="huehuetlanelchico"  ;;
+		74	) 
+			respuesta="huejotzingo	"  ;;
+		75	)
+			respuesta="hueyapan"  ;;
+		76	)
+			respuesta="hueytamalco"  ;;
+		77	)
+			respuesta="hueytlalpan"  ;;
+		78	)
+			respuesta="huitzilandeserdan"  ;;
+		79	)
+			respuesta="huitziltepec"  ;;
+		80	)
+			respuesta="atlequizayan"  ;;
+		81	)
+			respuesta="ixcamilpadeguerrero"  ;;
+		82	) 
+			respuesta="ixcaquixtla"  ;;
+		83	) 
+			respuesta="ixtacamaxtitlan"  ;;
+		84	)
+			respuesta="ixtepec"  ;;
+		85	) 
+			respuesta="izucardematamoros"  ;;
+		86	) 
+			respuesta="jalpan"  ;;
+		87	) 
+			respuesta="jolalpan"  ;;
+		88	) 
+			respuesta="jonotla"  ;;
+		89	) 
+			respuesta="jopala"  ;;
+		90	) 
+			respuesta="juancbonilla"  ;;
+		91	) 
+			respuesta="juangalindo"  ;;
+		92	)
+			respuesta="juannmendez"  ;;
+		93	) 
+			respuesta="lafragua"  ;;
+		94	) 
+			respuesta="libres"  ;;
+		95	)
+			respuesta="lamagdalenatlatlauquitepec"  ;;
+		96	) 
+			respuesta="mazapiltepecdejuarez"  ;;
+		97	) 
+			respuesta="mixtla"  ;;
+		98	)
+			respuesta="molcaxac"  ;;
+		99	) 
+			respuesta="cañadamorelos"  ;;
+		100	)
+			respuesta="naupan"  ;;
+		101	)
+			respuesta="nauzontla"  ;;
+		102	) 
+			respuesta="nealtican"  ;;
+		103	)
+			respuesta="nicolas bravo"  ;;
+		104	)
+			respuesta="nopalucan"  ;;
+		105	)
+			respuesta="ocotepec"  ;;
+		106	)
+			respuesta="ocoyucan"  ;;
+		107	)
+			respuesta="olintla"  ;;
+		108	)
+			respuesta="oriental"  ;;
+		109	)
+			respuesta="pahuatlan"  ;;
+		110	)
+			respuesta="palmardebravo"  ;;
+		111	)
+			respuesta="pantepec"  ;;
+		112	)
+			respuesta="petlalcingo"  ;;
+		113	) 
+			respuesta="piaxtla"  ;;
+		114	) 
+			respuesta="puebla"  ;;
+		115	)
+			respuesta="quecholac"  ;;
+		116	) 
+			respuesta="quimixtlan"  ;;
+		117	)
+			respuesta="rafaellaragrajales"  ;;
+		118	)
+			respuesta="losreyesdejuarez"  ;;
+		119	) 
+			respuesta="sanandrescholula"  ;;
+		120	)
+			respuesta="sanantoniocañada"  ;;
+		121	)
+			respuesta="sandiegolamesatochimiltzingo"  ;;
+		122	)
+			respuesta="sanfelipeteotlalcingo"  ;;
+		123	) 
+			respuesta="sanfelipetepatlan"  ;;
+		124	)
+			respuesta="sangabrielchilac"  ;;
+		125	)
+			respuesta="sangregorioatzompa"  ;;
+		126	)
+			respuesta="sanjeronimotecuanipan"  ;;
+		127	) 
+			respuesta="sanjeronimoxayacatlan"  ;;
+		128	)
+			respuesta="sanjosechiapa"  ;;
+		129	)
+			respuesta="sanjosemiahuatlan"  ;;
+		130	) 
+			respuesta="sanjuanatenco"  ;;
+		131	)
+			respuesta="sanjuanatzompa"  ;;
+		132	)
+			respuesta="sanmartintexmelucan"  ;;
+		133	)
+			respuesta="sanmartintotoltepec"  ;;
+		134	)
+			respuesta="sanmatiastlalancaleca"  ;;
+		135	) 
+			respuesta="sanmiguelixitlan"  ;;
+		136	)
+			respuesta="sanmiguelxoxtla"  ;;
+		137	) 
+			respuesta="sannicolasbuenosaires"  ;;
+		138	)
+			respuesta="sannicolasdelosranchos"  ;;
+		139	)
+			respuesta="sanpabloanicano"  ;;
+		140	)
+			respuesta="sanpedrocholula"  ;;
+		141	)
+			respuesta="sanpedroyeloixtlahuaca"  ;;
+		142	)
+			respuesta="sansalvadorelseco	"  ;;
+		143	)
+			respuesta="sansalvadorelverde"  ;;
+		144	)
+			respuesta="sansalvadorhuixcolotla"  ;;
+		145	)
+			respuesta="sansebastiantlacotepec"  ;;
+		146	)
+			respuesta="santacatarinatlaltempan"  ;;
+		147	) 
+			respuesta="santainesahuatempan"  ;;
+		148	)
+			respuesta="santaisabelcholula"  ;;
+		149	) 
+			respuesta="santiagomiahuatlan"  ;;
+		150	)
+			respuesta="huehuetlanelgrande"  ;;
+		151	)
+			respuesta="santotomashueyotlipan"  ;;
+		152	)
+			respuesta="soltepec"  ;;
+		153	)
+			respuesta="tecalideherrera"  ;;
+		154	)
+			respuesta="tecamachalco"  ;;
+		155	)
+			respuesta="tecomatlan"  ;;
+		156	)
+			respuesta="tehuacan"  ;;
+		157	)
+			respuesta="tehuitzingo"  ;;
+		158	) 
+			respuesta="tenampulco"  ;;
+		159	)
+			respuesta="teopantlan"  ;;
+		160	) 
+			respuesta="teotlalco"  ;;
+		161	)
+			respuesta="tepancodelopez"  ;;
+		162	)
+			respuesta="tepangoderodriguez"  ;;
+		163	)
+			respuesta="tepatlaxcodehidalgo"  ;;
+		164	)
+			respuesta="tepeaca"  ;;
+		165	)
+			respuesta="tepemaxalco"  ;;
+		166	) 
+			respuesta="tepeojuma"  ;;
+		167	)
+			respuesta="tepetzintla"  ;;
+		168	)
+			respuesta="tepexco"  ;;
+		169	)
+			respuesta="tepexiderodriguez"  ;;
+		170	)
+			respuesta="tepeyahualco"  ;;
+		171	)
+			respuesta="tepeyahualcodecuauhtemoc"  ;;
+		172	)
+			respuesta="teteladeocampo"  ;;
+		173	)
+			respuesta="tetelesdeavilacastillo"  ;;
+		174	)
+			respuesta="teziutlan"  ;;
+		175	)
+			respuesta="tianguismanalco"  ;;
+		176	) 
+			respuesta="tilapa"  ;;
+		177	)
+			respuesta="tlacotepecdebenitojuarez"  ;;
+		178	)
+			respuesta="tlacuilotepec"  ;;
+		179	)
+			respuesta="tlachichuca"  ;;
+		180	)
+			respuesta="tlahuapan"  ;;
+		181	)
+			respuesta="tlaltenango"  ;;
+		182	)
+			respuesta="tlanepantla"  ;;
+		183	) 
+			respuesta="tlaola"  ;;
+		184	)
+			respuesta="tlapacoya"  ;;
+		185	) 
+			respuesta="tlapanala"  ;;
+		186	)
+			respuesta="tlatlauquitepec"  ;;
+		187	) 
+			respuesta="tlaxco"  ;;
+		188	)
+			respuesta="tochimilco"  ;;
+		189	)
+			respuesta="tochtepec"  ;;
+		190	)
+			respuesta="totoltepecdeguerrero"  ;;
+		191	) 
+			respuesta="tulcingo"  ;;
+		192	) 
+			respuesta="tuzamapandegaleana"  ;;
+		193	)
+			respuesta="tzicatlacoyan"  ;;
+		194	)
+			respuesta="venustianocarranza"  ;;
+		195	)
+			respuesta="vicente guerrero"  ;;
+		196	)
+			respuesta="xayacatlandebravo"  ;;
+		197	)
+			respuesta="xicotepec"  ;;
+		198	)
+			respuesta="xicotlan"  ;;
+		199	)
+			respuesta="xiutetelco"  ;;
+		200	)
+			respuesta="xochiapulco"  ;;
+		201	)
+			respuesta="xochiltepec"  ;;
+		202	)
+			respuesta="xochitlandevicente suarez	"  ;;
+		203	)
+			respuesta="xochitlantodossantos"  ;;
+		204	)
+			respuesta="yaonahuac"  ;;
+		205	) 
+			respuesta="yehualtepec"  ;;
+		206	)
+			respuesta="zacapala"  ;;
+		207	) 
+			respuesta="zacapoaxtla"  ;;
+		208	)
+			respuesta="zacatlan"  ;;
+		209	) 
+			respuesta="zapotitlan"  ;;
+		210	) 
+			respuesta="zapotitlandemendez"  ;;
+		211	) 
+			respuesta="zaragoza"  ;;
+		212	) 
+			respuesta="zautla	" ;;
+		213	)
+			respuesta="zihuateutla"  ;;
+		214	)
+			respuesta="zinacatepec"  ;;
+		215	) 
+			respuesta="zongozotla"  ;;
+		216	)
+			respuesta="zoquiapan"  ;;
+		217) 
+			respuesta="zoquitlan"  ;;
+		*)			
+			respuesta="NoValido"		
+		;;			
+	esac
+
+	# URL a abrir
+	url="$1/$respuesta"
+
+	# Abrir la URL en el navegador predeterminado (Firefox)
+	#sudo firefox -new-window -kiosk  "$url"
 }
 
 limpiarImagenesDocker()
@@ -452,7 +914,7 @@ function obtenNoMunicipio() {
 
   # Usar el valor dentro de la función
   echo "El valor ingresado y validado es: $numero"
-  copiadoCarpetasFuente "$numero"
+  copiadoCarpetasFuente "$numero" "$2"
   
   #----------------------- Construye NGINX ------------------------------------------------------------
    ubicacion_actual=$(pwd)
@@ -466,7 +928,7 @@ function obtenNoMunicipio() {
    sumaiReportPort=$(echo "$iReportPort+ $numero" | bc)
    sumaiPortWebUrl=$(echo "$iPortWebUrl+ $numero" | bc)
 
-	configuraNGIX "192.168.0.226" "$sumaiPortWebUrl" "$sumaiPort" "$numero"
+	configuraNGIX "$2" "$sumaiPortWebUrl" "$sumaiPort" "$numero"
 	cd "$ubicacion_actual"
   #----------------------------------------------------------------------------------------------------
 
@@ -517,8 +979,8 @@ agregaNuevoNGINX ()
 					rewrite /Municipio/api(/.*)$ \$1 break;
 					proxy_pass http://localhost:PORTAPI;
 					proxy_http_version 1.1;
-					proxy_set_header   X-Forwarded-For \$remote_addr;
-					proxy_set_header   Host \$http_host;
+						proxy_set_header   X-Forwarded-For \$remote_addr;
+						proxy_set_header   Host \$http_host;
 				}
 		#-------------------------------------------------------------------
 
@@ -573,15 +1035,15 @@ ModificaNGINX()
 			proxy_pass http://localhost:URLWEB;
 			proxy_http_version 1.1;
 			proxy_set_header   X-Forwarded-For \$remote_addr;
-			proxy_set_header   Host $http_host;
+			proxy_set_header   Host \$http_host;
 		}
 
 		location /NuevoMunicipio/api {
 			rewrite /NuevoMunicipio/api(/.*)$ \$1 break;
 			proxy_pass http://localhost:PORTAPI;
 			proxy_http_version 1.1;
-            proxy_set_header   X-Forwarded-For \$remote_addr;
-            proxy_set_header   Host \$http_host;
+            	proxy_set_header   X-Forwarded-For \$remote_addr;
+            	proxy_set_header   Host \$http_host;
 		}
 		#-------------------------------------------------------
 }"
@@ -628,6 +1090,33 @@ configuraNGIX()
 {
 	# $1 Es la Ip de la máquina
     idInegi=$4
+
+	# Texto a buscar
+	textoPrimeraVez="#-------------------------------------------------------"
+
+	# Archivo a buscar
+	archivo="$1"
+
+	# Buscar el texto Municipio en el archivo base NGINX
+	grep -q "$textoPrimeraVez" "$archivo"
+
+	alMenosUnMunicipio=0
+
+	# Si el texto se encuentra, el script tendrá un código de salida de 0 (éxito)
+	if [ $? -eq 0 ]; then
+		#echo "El texto '#-------------------------------------------------------' se encuentra en el archivo base de NGINX que se traduce en que ya fue personalizado 1 vez."
+		alMenosUnMunicipio=1
+		echo "Ya tiene al menos una personalización"
+	else
+		# El texto 'Municipio' no se encuentra en el archivo base de NGINX por lo que puede ser
+		# que el archivo o nunca ha sido modificado o ya fue modificado al menos 1 vez"
+		# Averiguar si ya 
+		alMenosUnMunicipio=0
+		echo "No tiene ninguna personalización"
+	fi
+
+
+
 	#echo "Municipio a identificar : $idInegi"
     #########################################################################
 	valor=$idInegi
@@ -1080,27 +1569,26 @@ configuraNGIX()
 	sudo rm -f $1
 	cd ..
 	cd sites-available
-	sudo rm -f $1
 	echo "-----------  Archivo de NGINX para la IP ${1}  -------------"
 
 
 	#Localiza o crea el archivo Ngix necesario
    	if [ -f "$1" ]; then
+		if[ alMenosUnMunicipio == 1]
 		# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   		#Crea el nuevo archivo ${iIpEquipo} a partir de archivo default
 		#echo "El archivo $iIpEquipo necesario ya existe."
 		chmod -R 777 $1
 		#Modo 1
-		clear2
-		
+		#clear
 		ModificaNGINX $1 $2 $3 "$respuesta"
 		echo "ACTUALIZACION : En la IP_$1 se agrego el portal web en el puerto $2 y url de reportes $3 del municipio $respuesta"
-		#ls
+		# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	else
 			#echo "Se va a crear un nuevo archivo ${1}."
 			chmod -R 777 $1
 			#Modo 2
-			clear
+			#clear
 			#echo "Nombre del municipio a crear: $NombreMunicipio"
 			agregaNuevoNGINX $1 $2 $3 "$respuesta"
 			echo "NUEVO : En la IP_$1 se agrego el portal web en el puerto $2 y url de reportes $3 del municipio $respuesta"
@@ -1122,9 +1610,22 @@ principal()
 	#- - - - - - - - -  -- C A R P E T A S   F U E N T E S   P D N - - -  - - - - - - - - - - - - - - - - - - - - - 
 	#Existen los archivos fuentes?
 	verificaDirectoriosFuente
-	#- - - - - - - - - - - -    L I M P I A    D O C K E R - - - - - - - - - -
+	#- - - - - - - - -  -- - - - D E S P L I E G A  P O R T A L - - - - - - - - - - - - - - - - - - - - - 
+	clear
+	echo "Ingrese un número entre 1 y 217:"
+	#echo "Ingrese un número entre 1 y 217: "
+	read numero
+	#- - - - - - - - - -  - -  - - - - - - - 
+    #- - - - - - - - - - - - - - - - - - - -
+	echo "Escriba su número de ip local:"
+	#echo "Escriba su número de ip local: "
+	read numeroIp	
+	obtenNoMunicipio "$numero" "$numeroIp"
+
+	#- - - - - - - - - - - -    L I M P I A R    C O N T E N E D O R E S    D O C K E R - - - - - - - - - -
 	# Mostrar pregunta para limpiar el Docker
-	echo "¿Desea limpiar todo el Docker? (Si/No)"
+	echo "¿Desea limpiar todo el Docker? (Si/No/s/n)"
+	#echo "¿Desea limpiar todo el Docker? (Si/No)"
 
 	# Leer respuesta de limpiar del Docker 
 	read respuestaLimpiarDocker
@@ -1135,29 +1636,25 @@ principal()
 		echo "Se procede a limpiar las imagenes el Docker"
 		limpiarImagenesDocker
 		break
-	fi
-	#- - - - - - - - -  -- - - - D E S P L I E G A  P O R T A L - - - - - - - - - - - - - - - - - - - - - 
-	clear
-	echo "Ingrese un número entre 1 y 217: "
-	read numero
-	obtenNoMunicipio "$numero"
+	fi	
 
-	#- - - - - - - - -  - -  R E C O N S T R U Y E   E L   D  O  C  K  E  R   - - - - - - - - - - - - - - - - - - - 
+	#- - - - - - - - -  - -  R E C O N S T R U Y E   L O S   C O N T E N E D O R E S    D  O  C  K  E  R   - - - - - - - - - - - - - - - - - - - 
 	# Mostrar pregunta para continuar a la reconstrucción del Docker
-	echo "¿Desea reconstruir el Docker? (Si/No)"
+	echo "¿Desea reconstruir el Docker? (Si/No/s/n)" 
+	#echo "¿Desea reconstruir el Docker? (Si/No)"
 
-	# Leer respuesta de reconstrucción del Docker 
+	#Leer respuesta de reconstrucción del Docker 
 	read respuestaDocker
 
 	# Validar respuesta de reconstrucción del Docker
 	if [[ "$respuestaDocker" =~ ^(Si|S|s)$ ]]; then
 		#echo "Respuesta válida: $respuestaDocker"
 		echo "Se procede a reconstruir el Docker"
-		reconstruyeDocker
-	else
-		echo "Portal de Declaraciones Patrimoniales del Municipio $NombreMunicipio ha sido desplegado."
+		reconstruyeDocker "$numeroIp" "$numero"
+		break
 	fi
 	#- - - - - - - - -  -- - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - 
+	tput setaf 2 ; tput setab 0 ; echo "Portal de Declaraciones Patrimoniales del Municipio $NombreMunicipio ha sido desplegado."
 }
 
 
