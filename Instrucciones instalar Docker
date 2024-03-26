@@ -1,1 +1,13 @@
-https://gemini.google.com/app/d01c2b2aa71e7bfa
+#This is the network config written by 'subiquity'
+network:
+  ethernets:
+    eth0:
+      dhcp4: no
+      addresses: [172.25.45.157/24]
+      gateway4: 172.25.32.1
+      nameservers:
+        addresses: [8.8.8.8,8.8.4.4]
+  version: 2# Let NetworkManager manage all devices on this system
+network:
+  version: 2
+  renderer: NetworkManager
