@@ -1,3 +1,9 @@
+
+sudo apt install curl
+sudo curl -L -O https://raw.githubusercontent.com/gatroxrd/scriptCreadorMaquinasVirtualesUbuntu/main/creadorMaquinasVirtuales.sh
+sudo chmod +u+x creadorMaquinasVirtuales.sh
+sudo ./creadorMaquinasVirtuales.sh
+
 #This is the network config written by 'subiquity'
 network:
   ethernets:
