@@ -10,6 +10,55 @@
 export NombreMunicipio=""
 export idInegi=0
 
+descargaArchivosBase()
+{
+
+	usuario_actual=$(whoami)
+	# Repository URLs and Folder Names (corrected spelling)
+	repos=(
+	  "https://github.com/PDNMX/SistemaDeclaraciones_frontend.git"
+	  "https://github.com/PDNMX/SistemaDeclaraciones_backend.git"
+	  "https://github.com/PDNMX/SistemaDeclaraciones_reportes.git"
+	)
+	folders=(
+	  "SistemaDeclaraciones_frontend"
+	  "SistemaDeclaraciones_backend"
+	  "SistemaDeclaraciones_reportes"
+	)
+
+	# Download function (using 'git clone' instead of archive)
+	download_repo() {
+	  
+	  local repo_url="$1"
+	  local folder_name="$2"
+	  cd /home/"$usuario_actual"
+	  ls
+	  # Create folder if it doesn't exist
+	  if [[ ! -d "$folder_name" ]]; then
+	    mkdir -p "$folder_name"
+	  fi
+
+	  # Download using 'git clone' for version control benefits
+	  echo "Downloading $repo_url into $folder_name..."
+	  git clone "$repo_url" "$folder_name"
+
+	  if [[ $? -eq 0 ]]; then
+	    echo "Descarga completa."
+	  else
+	    echo "Error downloading $repo_url. Please check the URL and network connectivity."
+	  fi
+	}
+
+	# Download each repository
+	for ((i = 0; i < ${#repos[@]}; i++)); do
+	  download_repo "${repos[$i]}" "${folders[$i]}"
+	done
+
+	echo "Archivos fuentes descargados"
+
+
+}
+
 softwareRequerido()
 {
 	echo "Desea instalar el software prerrequerido [S/N]:"
@@ -30,6 +79,11 @@ softwareRequerido()
 		sudo apt  install nginx
 	 	sudo systemctl enable nginx
 	 	#------------------------------------------------------------
+
+		#Github -----------------------------------------------------
+		sudo apt update
+		sudo apt install git -y
+		#------------------------------------------------------------
  	fi    
 }
 
@@ -39,6 +93,7 @@ copiadoCarpetasFuente()
 	echo -e "\033[37m Secretaría Ejecutiva del Sistema Estatal Anticorrupción Puebla - SESEAP \033[0m"
 	iNoINEGI=$1
 	export sNoINEGI=$(printf "%03d" ${iNoINEGI})
+	usuario_actual=$(whoami)
 
 	set -m
 	
@@ -91,7 +146,8 @@ copiadoCarpetasFuente()
 	echo -e "\033[34m Número de municipio a crear es : $sNoINEGI \033[0m"
 	# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	# Ruta de origen (carpetas tal como se descargan del repositorio de la PDN)
-	ruta_origen="/home/pdepuebla/SistemaDeclaraciones_backend"
+	#ruta_origen="/home/pdepuebla/SistemaDeclaraciones_backend"
+	ruta_origen="/home/SistemaDeclaraciones_backend"
 	# Ruta de destino (carpetas copiadas donde se hacen las personalizaciones)
 	ruta_destino=$(printf "%s" "./")
 
@@ -101,6 +157,7 @@ copiadoCarpetasFuente()
 	# Verificar si la carpeta de destino existe, si no, crearla
 	if [ ! -d "$ruta_destino" ]; then
 	    mkdir -p "$ruta_destino" -m 755
+            sudo chmod +u+x  "$ruta_destino"
 	fi
 
 	# Copiar la carpeta y su contenido a la ruta de destino
@@ -117,12 +174,14 @@ copiadoCarpetasFuente()
 	# F R O N T E N D -- - - - - - - - - - - - - - - - - - - - - - - - 
 	# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	# Ruta de origen y destino
-	ruta_origen="/home/pdepuebla/SistemaDeclaraciones_frontend"
+	#ruta_origen="/home/pdepuebla/SistemaDeclaraciones_frontend"
+	ruta_origen="/home/SistemaDeclaraciones_frontend"
 	ruta_destino=$(printf "%s" "./")
 
 	# Verificar si la carpeta de destino existe, si no, crearla
 	if [ ! -d "$ruta_destino" ]; then
 	    mkdir -p "$ruta_destino" -m 755
+	    sudo chmod +u+x "$ruta_destino"
 	fi
 
 
@@ -143,12 +202,14 @@ copiadoCarpetasFuente()
 	# R E P O R T E S -- - - - - - - - - - - - - - - - - - - - - - - - 
 	# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	# Ruta de origen y destino
-	ruta_origen="/home/pdepuebla/SistemaDeclaraciones_reportes"
+	#ruta_origen="/home/pdepuebla/SistemaDeclaraciones_reportes"
+	ruta_origen="/home/SistemaDeclaraciones_reportes"
 	ruta_destino=$(printf "%s" "./")
 
 	# Verificar si la carpeta de destino existe, si no, crearla
 	if [ ! -d "$ruta_destino" ]; then
 	    mkdir -p "$ruta_destino" -m 755
+            sudo chmod +u+x "$ruta_destino"
 	fi
 
 	# Copiar la carpeta y su contenido a la ruta de destino
@@ -913,8 +974,6 @@ verificaDirectoriosFuente()
 			sudo git clone https://github.com/PDNMX/SistemaDeclaraciones_reportes.git
 			sudo chmod a+r SistemaDeclaraciones_reportes
 		fi
-
-		break
 	fi
 
 }
@@ -1660,7 +1719,6 @@ principal()
 		#echo "Respuesta válida: $respuestaLimpiarDocker"
 		echo "Se procede a limpiar las imagenes el Docker"
 		limpiarImagenesDocker
-		break
 	fi	
 
 	#- - - - - - - - -  - -  R E C O N S T R U Y E   L O S   C O N T E N E D O R E S    D  O  C  K  E  R   - - - - - - - - - - - - - - - - - - - 
@@ -1676,11 +1734,11 @@ principal()
 		#echo "Respuesta válida: $respuestaDocker"
 		echo "Se procede a reconstruir el Docker"
 		reconstruyeDocker "$numeroIp" "$numero"
-		break
 	fi
 	#- - - - - - - - -  -- - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - 
 	tput setaf 2 ; tput setab 0 ; echo "Portal de Declaraciones Patrimoniales del Municipio $NombreMunicipio ha sido desplegado."
 }
 
 
+descargaArchivosBase
 principal
