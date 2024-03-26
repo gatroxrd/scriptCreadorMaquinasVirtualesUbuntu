@@ -12,21 +12,25 @@ export idInegi=0
 
 softwareRequerido()
 {
-	#Docker ----------------------------------------------------------------------------------------------------------------------
- 	sudo apt update
-  	sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-   	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    	echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" | sudo tee /etc/apt/sources.list.d/docker.list
-
-     	sudo apt update
-        sudo apt install docker-ce docker-ce-cli containerd.io
-	#-------------1----------------------------------------------------------------------------------------------------------------
-
-	# NGINX -----------------------------------------------------
-	sudo apt  install nginx
- 	sudo systemctl enable nginx
- 	#------------------------------------------------------------
-    
+	echo "Desea instalar el software prerrequerido [S/N]:"
+	read respuestaPrerrequerido
+	# Validar respuesta de instalación de Visual Code
+	if [[ "$respuestaPrerrequerido" =~ ^(Si|S|s)$ ]]; then
+		#Docker ----------------------------------------------------------------------------------------------------------------------
+	 	sudo apt update
+	  	sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+	   	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+	    	echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" | sudo tee /etc/apt/sources.list.d/docker.list
+	
+	     	sudo apt update
+	        sudo apt install docker-ce docker-ce-cli containerd.io
+		#-------------1----------------------------------------------------------------------------------------------------------------
+	
+		# NGINX -----------------------------------------------------
+		sudo apt  install nginx
+	 	sudo systemctl enable nginx
+	 	#------------------------------------------------------------
+ 	fi    
 }
 
 copiadoCarpetasFuente()
@@ -1625,7 +1629,9 @@ configuraNGIX()
 
 principal()
 {
-	#- - - - - - - - -  -- P R O G R A M A   P R I N C I P A L - - - - - - - - - - - - - - - - - - - - - - - - 
+	#- - - - - - - - -  -- P R O G R A M A   P R I N C I P A L - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 	#Verificar si se necesita el software requerido
+  	softwareRequerido
 	#- - - - - - - - -  -- C A R P E T A S   F U E N T E S   P D N - - -  - - - - - - - - - - - - - - - - - - - - - 
 	#Existen los archivos fuentes?
 	verificaDirectoriosFuente
