@@ -12,6 +12,12 @@ export idInegi=0
 
 descargaArchivosBase()
 {
+	# Obtener la ruta real del script
+	script_path=$(readlink -e "$0")
+
+	# Extraer la ruta del directorio
+	dir_path=$(dirname "$script_path")	
+
 
 	usuario_actual=$(whoami)
 	# Repository URLs and Folder Names (corrected spelling)
@@ -26,13 +32,19 @@ descargaArchivosBase()
 	  "SistemaDeclaraciones_reportes"
 	)
 
+          cd "$dir_path"
+          ls
+          sudo rm -r SistemaDeclaraciones_frontend
+          sudo rm  -r SistemaDeclaraciones_backend
+          sudo rm -r SistemaDeclaraciones_reportes
+
 	# Download function (using 'git clone' instead of archive)
 	download_repo() {
 	  
 	  local repo_url="$1"
 	  local folder_name="$2"
-	  cd /home/"$usuario_actual"
-	  ls
+          cd  "$dir_path"
+
 	  # Create folder if it doesn't exist
 	  if [[ ! -d "$folder_name" ]]; then
 	    mkdir -p "$folder_name"
@@ -84,6 +96,12 @@ softwareRequerido()
 		sudo apt update
 		sudo apt install git -y
 		#------------------------------------------------------------
+
+		#Docker Compose --------------------------------------------
+		sudo apt update
+		sudo apt install docker-compose
+		#----------------------------------------------------------
+
  	fi    
 }
 
@@ -939,6 +957,12 @@ limpiarImagenesDocker()
 
 verificaDirectoriosFuente()
 {
+        # Obtener la ruta real del script
+        script_path=$(readlink -e "$0")
+
+        # Extraer la ruta del directorio
+        dir_path=$(dirname "$script_path")
+	cd "$dir_path"
 
 	# Desea que busquemos actualizaciones en los repositorios de la PDN
 	echo "¿Desea consultar el repositorio nacional de la PDN por actualizaciones? (Si/No)"
@@ -1690,7 +1714,9 @@ principal()
 {
 	#- - - - - - - - -  -- P R O G R A M A   P R I N C I P A L - - - - - - - - - - - - - - - - - - - - - - - - - - -
  	#Verificar si se necesita el software requerido
+	
   	softwareRequerido
+	descargaArchivosBase
 	#- - - - - - - - -  -- C A R P E T A S   F U E N T E S   P D N - - -  - - - - - - - - - - - - - - - - - - - - - 
 	#Existen los archivos fuentes?
 	verificaDirectoriosFuente
@@ -1740,5 +1766,4 @@ principal()
 }
 
 
-descargaArchivosBase
 principal
